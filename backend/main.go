@@ -33,6 +33,9 @@ func main() {
 	mux.HandleFunc("/", homeHandler)
 	mux.HandleFunc("/tasks", tasksHandler)
 
+	// DetailHandler
+	mux.HandleFunc("/tasks/", taskDetailHandler)
+
 	// middleware
 	corsHandler := enableCORS(mux)
 

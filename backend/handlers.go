@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -75,5 +76,54 @@ func getTasksHandler(w http.ResponseWriter, _ *http.Request) {
 	if err := json.NewEncoder(w).Encode(tasks); err != nil {
 		log.Printf("Error encoding tasks to JSON: %v", err)
 		http.Error(w, "Error generating response", http.StatusInternalServerError)
+	}
+}
+
+// CRUD - UPDATE
+
+func updateTaskHandler(w http.ResponseWriter, r *http.Request, id string) {
+	var updatedTask Task
+
+	if err := json.NewDecoder(r.Body).Decode(&updatedTask); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if updatedTask.Title == "" {
+		http.Error(w, "Title is required", http.StatusBadRequest)
+		return
+	}
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	_, ok := store[id]
+
+	if !ok {
+		http.Error(w, "Task not found", http.StatusNotFound)
+		return
+	}
+
+	updatedTask.ID = id
+	store[id] = updatedTask
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(updatedTask)
+}
+
+func taskDetailHandler(w http.ResponseWriter, r *http.Request) {
+	id := strings.TrimPrefix(r.URL.Path, "/tasks/")
+
+	if id == "" {
+		http.Error(w, "Task ID is required", http.StatusBadRequest)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodPut:
+		updateTaskHandler(w, r, id)
+	default:
+		http.Error(w, "Method not allowed on this route", http.StatusMethodNotAllowed)
 	}
 }
