@@ -112,6 +112,23 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request, id string) {
 	json.NewEncoder(w).Encode(updatedTask)
 }
 
+// CRUD - DELETE
+func deleteTaskHandler(w http.ResponseWriter, _ *http.Request, id string) {
+	mu.Lock()
+	defer mu.Unlock()
+	_, ok := store[id]
+	if !ok {
+		http.Error(w, "Task not found", http.StatusNotFound)
+		return
+	}
+
+	delete(store, id)
+
+	log.Printf("Task successfully deleted: ID %s", id)
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func taskDetailHandler(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/tasks/")
 
@@ -123,6 +140,8 @@ func taskDetailHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPut:
 		updateTaskHandler(w, r, id)
+	case http.MethodDelete:
+		deleteTaskHandler(w, r, id)
 	default:
 		http.Error(w, "Method not allowed on this route", http.StatusMethodNotAllowed)
 	}
