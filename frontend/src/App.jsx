@@ -1,10 +1,10 @@
+import KanbanBoard from "./components/KanbanBoard";
+
 function App() {
 	return (
-		<div className="flex h-screen w-full items-center justify-center bg-gray-900">
-			<h1 className="text-4xl font-bold text-red-500 underline">
-				Hello, World!
-			</h1>
-		</div>
+		<main className="flex min-h-screen w-full items-center overflow-x-auto overflow-y-hidden bg-gray-900 p-4">
+			<KanbanBoard />
+		</main>
 	);
 }
 export default App;
