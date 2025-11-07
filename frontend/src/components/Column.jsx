@@ -1,6 +1,26 @@
+import { useState } from "react";
 import TaskCard from "./TaskCard";
 
-function Column({ title, tasks }) {
+function Column({ title, tasks, onTaskAdd }) {
+	const [isAddingTask, setIsAddingTask] = useState(false);
+	const [newTaskTitle, setNewTaskTitle] = useState("");
+
+	const handleSubmit = (e) => {
+		e.preventDefault();
+
+		if (newTaskTitle.trim() === "") return;
+
+		onTaskAdd(newTaskTitle);
+
+		setNewTaskTitle("");
+		setIsAddingTask(false);
+	};
+
+	const handleCancel = () => {
+		setNewTaskTitle("");
+		setIsAddingTask(false);
+	};
+
 	return (
 		<div className="flex min-h-[500px] w-[350px] flex-col rounded-lg bg-gray-800">
 			{/* Column title */}
@@ -8,12 +28,49 @@ function Column({ title, tasks }) {
 				{title}
 			</h2>
 
-			{/* Tasks */}
+			{/* Tasks container */}
 			<div className="flex flex-grow flex-col gap-4 overflow-y-auto p-4">
 				{tasks.map((task) => (
 					<TaskCard key={task.id} task={task} />
 				))}
 			</div>
+
+			<footer className="p-4">
+				{!isAddingTask ? (
+					<button
+						onClick={() => setIsAddingTask(true)}
+						className="w-full rounded-lg p-2 text-sm text-gray-400 hover:bg-gray-700 hover:text-white"
+					>
+						+ Adicionar tarefa
+					</button>
+				) : (
+					<form onSubmit={handleSubmit}>
+						<textarea
+							autoFocus
+							value={newTaskTitle}
+							onChange={(e) => setNewTaskTitle(e.target.value)}
+							placeholder="Título da tarefa"
+							className="w-full resize-none rounded-lg border-gray-600 bg-gray-700 p-2 text-white"
+						/>
+
+						<div className="mt-2 flex gap-2">
+							<button
+								type="submit"
+								className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+							>
+								Salvar
+							</button>
+							<button
+								type="button"
+								onClick={handleCancel}
+								className="rounded-lg bg-transparent px-4 py-2 text-sm text-gray-400 hover:bg-gray-700"
+							>
+								Cancelar
+							</button>
+						</div>
+					</form>
+				)}
+			</footer>
 		</div>
 	);
 }

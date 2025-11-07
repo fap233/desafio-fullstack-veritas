@@ -27,11 +27,30 @@ function KanbanBoard() {
 		fetchTasks();
 	}, []);
 
+	const handleAddTask = async (title) => {
+		try {
+			const response = await axios.post(`${API_URL}/tasks`, {
+				title: title,
+			});
+
+			const newTask = response.data;
+			setTasks([...tasks, newTask]);
+		} catch (err) {
+			console.error("Error adding task", err);
+		}
+	};
 	return (
 		<div className="flex gap-4 m-auto">
 			{FIXED_COLUMNS.map((col) => {
 				const columnTasks = tasks.filter((task) => task.status === col.title);
-				return <Column key={col.id} title={col.title} tasks={columnTasks} />;
+				return (
+					<Column
+						key={col.id}
+						title={col.title}
+						tasks={columnTasks}
+						onTaskAdd={handleAddTask}
+					/>
+				);
 			})}
 		</div>
 	);
