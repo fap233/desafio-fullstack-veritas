@@ -1,4 +1,6 @@
-function Column({ title }) {
+import TaskCard from "./TaskCard";
+
+function Column({ title, tasks }) {
 	return (
 		<div className="flex min-h-[500px] w-[350px] flex-col rounded-lg bg-gray-800">
 			{/* Column title */}
@@ -6,8 +8,11 @@ function Column({ title }) {
 				{title}
 			</h2>
 
+			{/* Tasks */}
 			<div className="flex flex-grow flex-col gap-4 overflow-y-auto p-4">
-				{/* Tasks */}
+				{tasks.map((task) => (
+					<TaskCard key={task.id} task={task} />
+				))}
 			</div>
 		</div>
 	);
