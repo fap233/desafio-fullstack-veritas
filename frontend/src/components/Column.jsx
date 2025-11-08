@@ -1,9 +1,22 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import TaskCard from "./TaskCard";
+import {
+	SortableContext,
+	verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { useDroppable } from "@dnd-kit/core";
 
-function Column({ title, tasks, onTaskAdd }) {
+function Column({ title, tasks, onTaskAdd, onTaskDelete }) {
 	const [isAddingTask, setIsAddingTask] = useState(false);
 	const [newTaskTitle, setNewTaskTitle] = useState("");
+
+	const taskIds = useMemo(() => {
+		return tasks.map((task) => task.id);
+	}, [tasks]);
+
+	const { setNodeRef } = useDroppable({
+		id: title,
+	});
 
 	const handleSubmit = (e) => {
 		e.preventDefault();
@@ -22,18 +35,23 @@ function Column({ title, tasks, onTaskAdd }) {
 	};
 
 	return (
-		<div className="flex min-h-[500px] w-[350px] flex-col rounded-lg bg-gray-800">
+		<div
+			ref={setNodeRef}
+			className="flex min-h-[500px] w-[350px] flex-col rounded-lg bg-gray-800"
+		>
 			{/* Column title */}
 			<h2 className="rounded-t-lg bg-gray-900 p-4 font-bold text-white">
 				{title}
 			</h2>
 
 			{/* Tasks container */}
-			<div className="flex flex-grow flex-col gap-4 overflow-y-auto p-4">
-				{tasks.map((task) => (
-					<TaskCard key={task.id} task={task} />
-				))}
-			</div>
+			<SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
+				<div className="flex flex-grow flex-col gap-4 overflow-y-auto p-4">
+					{tasks.map((task) => (
+						<TaskCard key={task.id} task={task} onDelete={onTaskDelete} />
+					))}
+				</div>
+			</SortableContext>
 
 			<footer className="p-4">
 				{!isAddingTask ? (
