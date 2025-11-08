@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import TaskCard from "./TaskCard";
 import {
 	SortableContext,
@@ -18,9 +18,7 @@ function Column({
 	const [newTaskTitle, setNewTaskTitle] = useState("");
 	const [newTaskDescription, setNewTaskDescription] = useState("");
 
-	const taskIds = useMemo(() => {
-		return tasks.map((task) => task.id);
-	}, [tasks]);
+	const taskIds = tasks.map((task) => task.id);
 
 	const { setNodeRef } = useDroppable({
 		id: title,
