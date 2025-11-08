@@ -31,3 +31,4 @@ Thumbs.db
 .env.*
 !*.env.example
 /backend/tasks.json
+frontend/.vite/

@@ -60,13 +60,13 @@ O servidor iniciará na http://localhost:8080 com a persistência do tasks.json 
 ### 2. Frontend (React)
 
 ```bash
-#1. Navegue para a pasta do frontend em um novo terminal
+# 1. Navegue para a pasta do frontend em um novo terminal
 cd frontend
 
-#2. instale as dependências
+# 2. instale as dependências
 npm install
 
-#3. Rode o servidor de desenvolvimento (porta :5173)
+# 3. Rode o servidor de desenvolvimento (porta :5173)
 npm run dev
 ```
 
