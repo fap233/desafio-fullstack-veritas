@@ -6,7 +6,14 @@ import {
 } from "@dnd-kit/sortable";
 import { useDroppable } from "@dnd-kit/core";
 
-function Column({ title, tasks, onTaskAdd, onTaskDelete, onTaskUpdate }) {
+function Column({
+	title,
+	tasks,
+	onTaskAdd,
+	onTaskDelete,
+	onTaskUpdate,
+	canAddTask,
+}) {
 	const [isAddingTask, setIsAddingTask] = useState(false);
 	const [newTaskTitle, setNewTaskTitle] = useState("");
 	const [newTaskDescription, setNewTaskDescription] = useState("");
@@ -61,58 +68,60 @@ function Column({ title, tasks, onTaskAdd, onTaskDelete, onTaskUpdate }) {
 				</div>
 			</SortableContext>
 
-			<footer className="p-4">
-				{!isAddingTask ? (
-					<button
-						onClick={() => setIsAddingTask(true)}
-						className="w-full rounded-lg p-2 text-sm text-gray-400 hover:bg-gray-700 hover:text-white"
-					>
-						+ Adicionar tarefa
-					</button>
-				) : (
-					<form onSubmit={handleSubmit}>
-						{/* Title  */}
+			{canAddTask && (
+				<footer className="p-4">
+					{!isAddingTask ? (
+						<button
+							onClick={() => setIsAddingTask(true)}
+							className="w-full rounded-lg p-2 text-sm text-gray-400 hover:bg-gray-700 hover:text-white"
+						>
+							+ Adicionar tarefa
+						</button>
+					) : (
+						<form onSubmit={handleSubmit}>
+							{/* Title  */}
 
-						<textarea
-							autoFocus
-							value={newTaskTitle}
-							onChange={(e) => setNewTaskTitle(e.target.value)}
-							placeholder="Título da tarefa"
-							className="w-full resize-none rounded-lg border-gray-600 bg-gray-700 p-2 text-white"
-						/>
+							<textarea
+								autoFocus
+								value={newTaskTitle}
+								onChange={(e) => setNewTaskTitle(e.target.value)}
+								placeholder="Título da tarefa"
+								className="w-full resize-none rounded-lg border-gray-600 bg-gray-700 p-2 text-white"
+							/>
 
-						{/* Description */}
+							{/* Description */}
 
-						<textarea
-							value={newTaskDescription}
-							onChange={(e) => setNewTaskDescription(e.target.value)}
-							placeholder="Descrição da tarefa (opcional)"
-							className="w-full resize-none rounded-lg border-gray-600 bg-gray-700 p-2 text-white"
-						/>
+							<textarea
+								value={newTaskDescription}
+								onChange={(e) => setNewTaskDescription(e.target.value)}
+								placeholder="Descrição da tarefa (opcional)"
+								className="w-full resize-none rounded-lg border-gray-600 bg-gray-700 p-2 text-white"
+							/>
 
-						{/* Buttons  */}
+							{/* Buttons  */}
 
-						<div className="mt-2 flex gap-2">
-							{/* save button */}
-							<button
-								type="submit"
-								className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 hover:cursor-pointer"
-							>
-								Salvar
-							</button>
+							<div className="mt-2 flex gap-2">
+								{/* save button */}
+								<button
+									type="submit"
+									className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 hover:cursor-pointer"
+								>
+									Salvar
+								</button>
 
-							{/* cancel button */}
-							<button
-								type="button"
-								onClick={handleCancel}
-								className="rounded-lg bg-transparent px-4 py-2 text-sm text-gray-400 hover:bg-gray-700 hover:cursor-pointer"
-							>
-								Cancelar
-							</button>
-						</div>
-					</form>
-				)}
-			</footer>
+								{/* cancel button */}
+								<button
+									type="button"
+									onClick={handleCancel}
+									className="rounded-lg bg-transparent px-4 py-2 text-sm text-gray-400 hover:bg-gray-700 hover:cursor-pointer"
+								>
+									Cancelar
+								</button>
+							</div>
+						</form>
+					)}
+				</footer>
+			)}
 		</div>
 	);
 }

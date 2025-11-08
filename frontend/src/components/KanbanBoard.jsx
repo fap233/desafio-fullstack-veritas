@@ -188,6 +188,7 @@ function KanbanBoard() {
 							onTaskAdd={handleAddTask}
 							onTaskDelete={handleDeleteTask}
 							onTaskUpdate={handleUpdateTask}
+							canAddTask={col.id === "todo"}
 						/>
 					);
 				})}
