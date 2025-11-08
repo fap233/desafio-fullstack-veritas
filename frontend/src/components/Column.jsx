@@ -6,7 +6,7 @@ import {
 } from "@dnd-kit/sortable";
 import { useDroppable } from "@dnd-kit/core";
 
-function Column({ title, tasks, onTaskAdd, onTaskDelete }) {
+function Column({ title, tasks, onTaskAdd, onTaskDelete, onTaskUpdate }) {
 	const [isAddingTask, setIsAddingTask] = useState(false);
 	const [newTaskTitle, setNewTaskTitle] = useState("");
 	const [newTaskDescription, setNewTaskDescription] = useState("");
@@ -51,7 +51,12 @@ function Column({ title, tasks, onTaskAdd, onTaskDelete }) {
 			<SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
 				<div className="flex flex-grow flex-col gap-4 overflow-y-auto p-4">
 					{tasks.map((task) => (
-						<TaskCard key={task.id} task={task} onDelete={onTaskDelete} />
+						<TaskCard
+							key={task.id}
+							task={task}
+							onDelete={onTaskDelete}
+							onUpdate={onTaskUpdate}
+						/>
 					))}
 				</div>
 			</SortableContext>
@@ -88,16 +93,19 @@ function Column({ title, tasks, onTaskAdd, onTaskDelete }) {
 						{/* Buttons  */}
 
 						<div className="mt-2 flex gap-2">
+							{/* save button */}
 							<button
 								type="submit"
-								className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+								className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 hover:cursor-pointer"
 							>
 								Salvar
 							</button>
+
+							{/* cancel button */}
 							<button
 								type="button"
 								onClick={handleCancel}
-								className="rounded-lg bg-transparent px-4 py-2 text-sm text-gray-400 hover:bg-gray-700"
+								className="rounded-lg bg-transparent px-4 py-2 text-sm text-gray-400 hover:bg-gray-700 hover:cursor-pointer"
 							>
 								Cancelar
 							</button>

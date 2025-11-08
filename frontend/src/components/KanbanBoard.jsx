@@ -50,9 +50,45 @@ function KanbanBoard() {
 			});
 
 			const newTask = response.data;
-			setTasks([...tasks, newTask]);
+			setTasks((prevTasks) =>
+				[...prevTasks, newTask].sort((a, b) => parseInt(a.id) - parseInt(b.id)),
+			);
 		} catch (err) {
 			console.error("Error adding task", err);
+		}
+	};
+
+	const handleUpdateTask = async (taskId, newTitle, newDescription) => {
+		let originalTask;
+		try {
+			originalTask = tasks.find((task) => task.id === taskId);
+			if (!originalTask) return;
+
+			const updatedTaskPayload = {
+				title: newTitle,
+				description: newDescription,
+				status: originalTask.status,
+			};
+
+			setTasks((prevTasks) =>
+				prevTasks
+					.map((t) =>
+						t.id === taskId
+							? { ...t, title: newTitle, description: newDescription }
+							: t,
+					)
+					.sort((a, b) => parseInt(a.id) - parseInt(b.id)),
+			);
+
+			await axios.put(`${API_URL}/tasks/${taskId}`, updatedTaskPayload);
+		} catch (err) {
+			console.error("Error updating task", err);
+
+			if (originalTask) {
+				setTasks((prevTasks) =>
+					prevTasks.map((t) => (t.id === taskId ? originalTask : t)),
+				);
+			}
 		}
 	};
 
@@ -151,6 +187,7 @@ function KanbanBoard() {
 							tasks={columnTasks}
 							onTaskAdd={handleAddTask}
 							onTaskDelete={handleDeleteTask}
+							onTaskUpdate={handleUpdateTask}
 						/>
 					);
 				})}
