@@ -21,8 +21,8 @@ const API_URL = "http://localhost:8080";
 
 function KanbanBoard() {
 	const [tasks, setTasks] = useState([]);
-
 	const [activeTask, setActiveTask] = useState(null);
+	const [isLoading, setIsLoading] = useState(true);
 
 	useEffect(() => {
 		const fetchTasks = async () => {
@@ -36,6 +36,9 @@ function KanbanBoard() {
 				setTasks(fetchedTasks);
 			} catch (err) {
 				console.error("Error fetching tasks", err);
+				alert("Erro ao buscar tarefas. Tente recarregar a página.");
+			} finally {
+				setIsLoading(false);
 			}
 		};
 
@@ -55,6 +58,7 @@ function KanbanBoard() {
 			);
 		} catch (err) {
 			console.error("Error adding task", err);
+			alert("Falha ao adicionar tarefa. Tente novamente.");
 		}
 	};
 
@@ -83,6 +87,7 @@ function KanbanBoard() {
 			await axios.put(`${API_URL}/tasks/${taskId}`, updatedTaskPayload);
 		} catch (err) {
 			console.error("Error updating task", err);
+			alert("Falha ao atualizar tarefa. Tente novamente.");
 
 			if (originalTask) {
 				setTasks((prevTasks) =>
@@ -98,6 +103,7 @@ function KanbanBoard() {
 			setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
 		} catch (err) {
 			console.error("Error deleting task", err);
+			alert("Falha ao deletar tarefa. Tente novamente.");
 		}
 	};
 
@@ -163,6 +169,7 @@ function KanbanBoard() {
 
 			.catch((err) => {
 				console.error("Error updating task:", err);
+				alert("Falha ao mover tarefa. A tarefa voltará à coluna original.");
 				setTasks((prevTasks) => {
 					return prevTasks.map((t) =>
 						t.id === task.id ? { ...t, status: task.status } : t,
@@ -171,6 +178,16 @@ function KanbanBoard() {
 			});
 	};
 
+	// loading return
+	if (isLoading) {
+		return (
+			<div className="m-auto text-center font-bold text-white">
+				Carregando tarefas...
+			</div>
+		);
+	}
+
+	// main raturn
 	return (
 		<DndContext
 			sensors={sensors}
