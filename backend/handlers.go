@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -14,6 +16,65 @@ var store = make(map[string]Task)
 var mu sync.RWMutex
 
 var taskIDCounter = 0
+
+const jsonFilePath = "tasks.json"
+
+func saveTasksToFile() {
+	mu.RLock()
+	defer mu.RUnlock()
+
+	tasks := make([]Task, 0, len(store))
+	for _, task := range store {
+		tasks = append(tasks, task)
+	}
+
+	sort.Slice(tasks, func(i, j int) bool {
+		idI, _ := strconv.Atoi(tasks[i].ID)
+		idJ, _ := strconv.Atoi(tasks[j].ID)
+		return idI < idJ
+	})
+
+	data, err := json.MarshalIndent(tasks, "", "  ")
+	if err != nil {
+		log.Printf("Error marshaling tasks to JSON: %v", err)
+		return
+	}
+
+	if err := os.WriteFile(jsonFilePath, data, 0644); err != nil {
+		log.Printf("Error writing tasks to file: %v", err)
+	}
+}
+
+func loadTasksFromFile() {
+
+	data, err := os.ReadFile(jsonFilePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			log.Printf("No existing tasks file found, starting fresh.")
+			return
+		}
+		log.Printf("Error reading tasks from file: %v", err)
+		return
+	}
+
+	var tasks []Task
+	if err := json.Unmarshal(data, &tasks); err != nil {
+		log.Printf("Error unmarshaling tasks from JSON: %v", err)
+		return
+	}
+
+	maxID := 0
+	for _, task := range tasks {
+		store[task.ID] = task
+
+		id, _ := strconv.Atoi(task.ID)
+		if id > maxID {
+			maxID = id
+		}
+	}
+	taskIDCounter = maxID
+	log.Printf("Loaded %d tasks from tasks.json. Counter set to %d.", len(store), maxID)
+}
 
 func getNextTaskID() string {
 	mu.Lock()
@@ -42,6 +103,8 @@ func createTaskHandler(w http.ResponseWriter, r *http.Request) {
 	mu.Lock()
 	store[newTask.ID] = newTask
 	mu.Unlock()
+
+	saveTasksToFile()
 
 	log.Printf("Task successfully created: ID %s, Title %s", newTask.ID, newTask.Title)
 
@@ -95,17 +158,21 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request, id string) {
 	}
 
 	mu.Lock()
-	defer mu.Unlock()
 
 	_, ok := store[id]
 
 	if !ok {
+		mu.Unlock()
 		http.Error(w, "Task not found", http.StatusNotFound)
 		return
 	}
 
 	updatedTask.ID = id
 	store[id] = updatedTask
+
+	mu.Unlock()
+
+	saveTasksToFile()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -115,14 +182,18 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request, id string) {
 // CRUD - DELETE
 func deleteTaskHandler(w http.ResponseWriter, _ *http.Request, id string) {
 	mu.Lock()
-	defer mu.Unlock()
 	_, ok := store[id]
 	if !ok {
+		mu.Unlock()
 		http.Error(w, "Task not found", http.StatusNotFound)
 		return
 	}
 
 	delete(store, id)
+
+	mu.Unlock()
+
+	saveTasksToFile()
 
 	log.Printf("Task successfully deleted: ID %s", id)
 

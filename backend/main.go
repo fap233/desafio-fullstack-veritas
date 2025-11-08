@@ -26,6 +26,9 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	
+	loadTasksFromFile()
+
 	// multiplexer
 	mux := http.NewServeMux()
 
