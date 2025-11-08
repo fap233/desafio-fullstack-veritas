@@ -9,6 +9,7 @@ import { useDroppable } from "@dnd-kit/core";
 function Column({ title, tasks, onTaskAdd, onTaskDelete }) {
 	const [isAddingTask, setIsAddingTask] = useState(false);
 	const [newTaskTitle, setNewTaskTitle] = useState("");
+	const [newTaskDescription, setNewTaskDescription] = useState("");
 
 	const taskIds = useMemo(() => {
 		return tasks.map((task) => task.id);
@@ -23,14 +24,16 @@ function Column({ title, tasks, onTaskAdd, onTaskDelete }) {
 
 		if (newTaskTitle.trim() === "") return;
 
-		onTaskAdd(newTaskTitle);
+		onTaskAdd(newTaskTitle, newTaskDescription);
 
 		setNewTaskTitle("");
+		setNewTaskDescription("");
 		setIsAddingTask(false);
 	};
 
 	const handleCancel = () => {
 		setNewTaskTitle("");
+		setNewTaskDescription("");
 		setIsAddingTask(false);
 	};
 
@@ -63,6 +66,8 @@ function Column({ title, tasks, onTaskAdd, onTaskDelete }) {
 					</button>
 				) : (
 					<form onSubmit={handleSubmit}>
+						{/* Title  */}
+
 						<textarea
 							autoFocus
 							value={newTaskTitle}
@@ -70,6 +75,17 @@ function Column({ title, tasks, onTaskAdd, onTaskDelete }) {
 							placeholder="Título da tarefa"
 							className="w-full resize-none rounded-lg border-gray-600 bg-gray-700 p-2 text-white"
 						/>
+
+						{/* Description */}
+
+						<textarea
+							value={newTaskDescription}
+							onChange={(e) => setNewTaskDescription(e.target.value)}
+							placeholder="Descrição da tarefa (opcional)"
+							className="w-full resize-none rounded-lg border-gray-600 bg-gray-700 p-2 text-white"
+						/>
+
+						{/* Buttons  */}
 
 						<div className="mt-2 flex gap-2">
 							<button

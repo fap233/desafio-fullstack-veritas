@@ -42,10 +42,11 @@ function KanbanBoard() {
 		fetchTasks();
 	}, []);
 
-	const handleAddTask = async (title) => {
+	const handleAddTask = async (title, description) => {
 		try {
 			const response = await axios.post(`${API_URL}/tasks`, {
 				title: title,
+				description: description,
 			});
 
 			const newTask = response.data;
