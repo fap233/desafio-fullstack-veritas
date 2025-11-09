@@ -157,6 +157,17 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request, id string) {
 		return
 	}
 
+	isValidStatus := false
+	switch updatedTask.Status {
+	case ToDoStatus, InProgressStatus, DoneStatus:
+		isValidStatus = true
+	}
+
+	if!isValidStatus {
+		http.Error(w, "Invalid status value. Must be 'A Fazer', 'Em Progresso' or 'Concluídas'", http.StatusBadRequest)
+		return
+	}
+
 	mu.Lock()
 
 	_, ok := store[id]
