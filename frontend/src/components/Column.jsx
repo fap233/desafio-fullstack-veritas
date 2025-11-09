@@ -27,8 +27,10 @@ function Column({
 	const handleSubmit = (e) => {
 		e.preventDefault();
 
-		if (newTaskTitle.trim() === "") return;
-
+		if (newTaskTitle.trim() === "") {
+			alert("O título da tarefa não pode estar vazio.");
+			return;
+		}
 		onTaskAdd(newTaskTitle, newTaskDescription);
 
 		setNewTaskTitle("");
