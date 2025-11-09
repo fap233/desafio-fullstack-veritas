@@ -46,7 +46,6 @@ func saveTasksToFile() {
 }
 
 func loadTasksFromFile() {
-
 	data, err := os.ReadFile(jsonFilePath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -163,7 +162,7 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request, id string) {
 		isValidStatus = true
 	}
 
-	if!isValidStatus {
+	if !isValidStatus {
 		http.Error(w, "Invalid status value. Must be 'A Fazer', 'Em Progresso' or 'Concluídas'", http.StatusBadRequest)
 		return
 	}
