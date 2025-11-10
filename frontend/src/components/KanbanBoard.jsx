@@ -194,7 +194,7 @@ function KanbanBoard() {
 			onDragStart={handleDragStart}
 			onDragEnd={handleDragEnd}
 		>
-			<div className="flex gap-4 m-auto">
+			<div className="flex flex-col md:flex-row gap-4 m-auto w-full md:w-auto">
 				{FIXED_COLUMNS.map((col) => {
 					const columnTasks = tasks.filter((task) => task.status === col.title);
 					return (
