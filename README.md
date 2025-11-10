@@ -4,7 +4,7 @@ Este projeto é uma solução para o desafio técnico da Veritas Consultoria, im
 
 ## Preview
 
-(https://github.com/user-attachments/assets/ace2c9cc-f472-43df-b883-99edc4085ded)
+<https://github.com/user-attachments/assets/ace2c9cc-f472-43df-b883-99edc4085ded>
 
 ## 🚀 Funcionalidades
 
