@@ -4,9 +4,13 @@ Este projeto é uma solução para o desafio técnico da Veritas Consultoria, im
 
 ## Preview
 
-## soon
+(https://github.com/user-attachments/assets/ace2c9cc-f472-43df-b883-99edc4085ded)
 
 ## 🚀 Funcionalidades
+
+
+
+
 
 ### Backend (Go)
 
