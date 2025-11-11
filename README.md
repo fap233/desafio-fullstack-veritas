@@ -136,7 +136,7 @@ A documentação exigida (User Flow) encontra-se na pasta /docs.
 - Reordenação Persistente: Implementar um campo order no backend para que a reordenação de tarefas na mesma coluna seja persistida.
 - Adicionar banco de dados para armazenamento mais robusto (ex: SQLite, PostgreSQL).
 - Adicionar sistema de autenticação de usuários.
-- Adicionar perimissões de acesso.
+- Adicionar permissões de acesso.
 - Adicionar data limite e notificações para tarefas.
 - Permitir criação de múltiplos quadros Kanban por usuário.
 - Permitir anexar arquivos às tarefas.
