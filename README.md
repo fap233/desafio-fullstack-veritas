@@ -58,7 +58,6 @@ Esta opção sobe todo o ambiente (Backend + Frontend + Banco JSON) isoladamente
 
 ```bash
 docker compose up --build
-
 ```
 
 Acesse a aplicação em: http://localhost:5173
@@ -118,7 +117,8 @@ go test -v
 
 A documentação exigida (User Flow) encontra-se na pasta /docs.
 
-- User Flow (Fluxo do Usuário): Diagrama detalhando as interações do usuário.
+- **[User Flow](./docs/user-flow.png)**: Fluxo de interação do usuário.
+- **[Data Flow](./docs/data-flow.png)**: Fluxo de dados entre Frontend, API e Persistência.
 
 ## 📝 Decisões Técnicas
 
