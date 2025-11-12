@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Column from "./Column";
-import axios from "axios";
+import { getTasks, createTask, updateTask, deleteTask } from "../services/api";
 import {
 	DndContext,
 	DragOverlay,
@@ -18,8 +18,6 @@ const FIXED_COLUMNS = [
 	{ id: "done", title: "Concluídas" },
 ];
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
-
 function KanbanBoard() {
 	const [tasks, setTasks] = useState([]);
 	const [activeTask, setActiveTask] = useState(null);
@@ -28,9 +26,7 @@ function KanbanBoard() {
 	useEffect(() => {
 		const fetchTasks = async () => {
 			try {
-				const response = await axios.get(`${API_URL}/tasks`);
-
-				const fetchedTasks = response.data || [];
+				const fetchedTasks = await getTasks();
 
 				fetchedTasks.sort((a, b) => parseInt(a.id) - parseInt(b.id));
 
@@ -48,12 +44,8 @@ function KanbanBoard() {
 
 	const handleAddTask = async (title, description) => {
 		try {
-			const response = await axios.post(`${API_URL}/tasks`, {
-				title: title,
-				description: description,
-			});
+			const newTask = await createTask(title, description);
 
-			const newTask = response.data;
 			setTasks((prevTasks) =>
 				[...prevTasks, newTask].sort((a, b) => parseInt(a.id) - parseInt(b.id)),
 			);
@@ -72,12 +64,6 @@ function KanbanBoard() {
 			originalTask = tasks.find((task) => task.id === taskId);
 			if (!originalTask) return false;
 
-			const updatedTaskPayload = {
-				title: newTitle,
-				description: newDescription,
-				status: originalTask.status,
-			};
-
 			setTasks((prevTasks) =>
 				prevTasks
 					.map((t) =>
@@ -88,7 +74,7 @@ function KanbanBoard() {
 					.sort((a, b) => parseInt(a.id) - parseInt(b.id)),
 			);
 
-			await axios.put(`${API_URL}/tasks/${taskId}`, updatedTaskPayload);
+			await updateTask(taskId, newTitle, newDescription, originalTask.status);
 
 			toast.success("Tarefa atualizada com sucesso!");
 
@@ -108,7 +94,7 @@ function KanbanBoard() {
 
 	const handleDeleteTask = async (taskId) => {
 		try {
-			await axios.delete(`${API_URL}/tasks/${taskId}`);
+			await deleteTask(taskId);
 			setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
 			toast.success("Tarefa deletada com sucesso!");
 		} catch (err) {
@@ -167,14 +153,7 @@ function KanbanBoard() {
 			);
 		});
 
-		const updatedTaskPayload = {
-			title: task.title,
-			description: task.description || "",
-			status: newStatus,
-		};
-
-		axios
-			.put(`${API_URL}/tasks/${task.id}`, updatedTaskPayload)
+		updateTask(task.id, task.title, task.description || "", newStatus)
 			.then(() => {
 				toast.success("Tarefa movida com sucesso!");
 			})
