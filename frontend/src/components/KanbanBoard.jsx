@@ -70,7 +70,7 @@ function KanbanBoard() {
 		let originalTask;
 		try {
 			originalTask = tasks.find((task) => task.id === taskId);
-			if (!originalTask) return;
+			if (!originalTask) return false;
 
 			const updatedTaskPayload = {
 				title: newTitle,
@@ -89,6 +89,10 @@ function KanbanBoard() {
 			);
 
 			await axios.put(`${API_URL}/tasks/${taskId}`, updatedTaskPayload);
+
+			toast.success("Tarefa atualizada com sucesso!");
+
+			return true;
 		} catch (err) {
 			console.error("Error updating task", err);
 			toast.error("Falha ao atualizar tarefa. Tente novamente.");
@@ -98,6 +102,7 @@ function KanbanBoard() {
 					prevTasks.map((t) => (t.id === taskId ? originalTask : t)),
 				);
 			}
+			return false;
 		}
 	};
 
@@ -105,6 +110,7 @@ function KanbanBoard() {
 		try {
 			await axios.delete(`${API_URL}/tasks/${taskId}`);
 			setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
+			toast.success("Tarefa deletada com sucesso!");
 		} catch (err) {
 			console.error("Error deleting task", err);
 			toast.error("Falha ao deletar tarefa. Tente novamente.");
@@ -169,7 +175,9 @@ function KanbanBoard() {
 
 		axios
 			.put(`${API_URL}/tasks/${task.id}`, updatedTaskPayload)
-			.then(() => {})
+			.then(() => {
+				toast.success("Tarefa movida com sucesso!");
+			})
 
 			.catch((err) => {
 				console.error("Error updating task:", err);
