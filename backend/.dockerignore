@@ -1,0 +1,12 @@
+# local binaries
+server
+server.exe
+
+# configs and git
+.git
+.gitignore
+.env
+
+# system and logs
+*.log
+.DS_Store
