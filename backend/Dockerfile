@@ -12,11 +12,15 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o server .
 
 FROM alpine:3.21
 
-WORKDIR /root/
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-COPY --from=builder /app/server .
+WORKDIR /app
 
-COPY tasks.json .
+COPY --from=builder --chown=appuser:appgroup /app/server .
+
+COPY --chown=appuser:appgroup tasks.json .
+
+USER appuser
 
 EXPOSE 8080
 

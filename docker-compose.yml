@@ -7,7 +7,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./backend/tasks.json:/root/tasks.json
+      - ./backend/tasks.json:/app/tasks.json
 
   frontend:
     build: ./frontend
