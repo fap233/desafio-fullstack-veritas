@@ -56,6 +56,9 @@ func loadTasksFromFile() {
 		return
 	}
 
+	mu.Lock()
+	defer mu.Unlock()
+
 	var tasks []Task
 	if err := json.Unmarshal(data, &tasks); err != nil {
 		log.Printf("Error unmarshaling tasks from JSON: %v", err)
@@ -66,7 +69,12 @@ func loadTasksFromFile() {
 	for _, task := range tasks {
 		store[task.ID] = task
 
-		id, _ := strconv.Atoi(task.ID)
+		id, err := strconv.Atoi(task.ID)
+		if err != nil {
+			log.Printf("Warning: could not parse task ID '%s' from JSON file: %v", task.ID, err)
+			continue
+		}
+
 		if id > maxID {
 			maxID = id
 		}
