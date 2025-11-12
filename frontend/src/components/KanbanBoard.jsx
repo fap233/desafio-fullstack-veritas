@@ -9,7 +9,7 @@ import {
 	useSensors,
 } from "@dnd-kit/core";
 import TaskCard from "./TaskCard";
-import * as ReactDOM from "react-dom";
+import { createPortal } from "react-dom";
 
 const FIXED_COLUMNS = [
 	{ id: "todo", title: "A Fazer" },
@@ -211,7 +211,7 @@ function KanbanBoard() {
 				})}
 			</div>
 
-			{ReactDOM.createPortal(
+			{createPortal(
 				<DragOverlay>
 					{activeTask && <TaskCard task={activeTask} />}
 				</DragOverlay>,
