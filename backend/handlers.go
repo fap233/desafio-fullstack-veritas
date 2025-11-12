@@ -73,19 +73,24 @@ func loadTasksFromFile() {
 // CRUD - CREATE
 
 func createTaskHandler(w http.ResponseWriter, r *http.Request) {
-	var newTask Task
-	if err := json.NewDecoder(r.Body).Decode(&newTask); err != nil {
+	var req CreateTaskRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		log.Printf("Error decoding JSON: %v", err)
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-	if newTask.Title == "" {
+	if req.Title == "" {
 		http.Error(w, "Title is required", http.StatusBadRequest)
 		return
 	}
-	newTask.ID = uuid.New().String()
-	newTask.Status = ToDoStatus
-	newTask.CreatedAt = time.Now().Format(time.RFC3339)
+	newTask := Task{
+		ID:          uuid.New().String(),
+		Title:       req.Title,
+		Description: req.Description,
+		Status:      ToDoStatus,
+		CreatedAt:   time.Now().Format(time.RFC3339),
+	}
 
 	mu.Lock()
 	store[newTask.ID] = newTask
@@ -132,20 +137,20 @@ func getTasksHandler(w http.ResponseWriter, _ *http.Request) {
 // CRUD - UPDATE
 
 func updateTaskHandler(w http.ResponseWriter, r *http.Request, id string) {
-	var inputTask Task
+	var req UpdateTaskRequest
 
-	if err := json.NewDecoder(r.Body).Decode(&inputTask); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	if inputTask.Title == "" {
+	if req.Title == "" {
 		http.Error(w, "Title is required", http.StatusBadRequest)
 		return
 	}
 
 	isValidStatus := false
-	switch inputTask.Status {
+	switch req.Status {
 	case ToDoStatus, InProgressStatus, DoneStatus:
 		isValidStatus = true
 	}
@@ -167,11 +172,11 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request, id string) {
 		return
 	}
 
-	existingTask.Title = inputTask.Title
-	existingTask.Description = inputTask.Description
-	existingTask.Status = inputTask.Status
-	store[id] = existingTask
+	existingTask.Title = req.Title
+	existingTask.Description = req.Description
+	existingTask.Status = req.Status
 
+	store[id] = existingTask
 	mu.Unlock()
 
 	saveTasksToFile()
