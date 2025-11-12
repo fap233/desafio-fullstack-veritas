@@ -132,20 +132,20 @@ func getTasksHandler(w http.ResponseWriter, _ *http.Request) {
 // CRUD - UPDATE
 
 func updateTaskHandler(w http.ResponseWriter, r *http.Request, id string) {
-	var updatedTask Task
+	var inputTask Task
 
-	if err := json.NewDecoder(r.Body).Decode(&updatedTask); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&inputTask); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	if updatedTask.Title == "" {
+	if inputTask.Title == "" {
 		http.Error(w, "Title is required", http.StatusBadRequest)
 		return
 	}
 
 	isValidStatus := false
-	switch updatedTask.Status {
+	switch inputTask.Status {
 	case ToDoStatus, InProgressStatus, DoneStatus:
 		isValidStatus = true
 	}
@@ -159,7 +159,7 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request, id string) {
 
 	mu.Lock()
 
-	_, ok := store[id]
+	existingTask, ok := store[id]
 
 	if !ok {
 		mu.Unlock()
@@ -167,8 +167,10 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request, id string) {
 		return
 	}
 
-	updatedTask.ID = id
-	store[id] = updatedTask
+	existingTask.Title = inputTask.Title
+	existingTask.Description = inputTask.Description
+	existingTask.Status = inputTask.Status
+	store[id] = existingTask
 
 	mu.Unlock()
 
@@ -176,7 +178,7 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request, id string) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(updatedTask)
+	json.NewEncoder(w).Encode(existingTask)
 }
 
 // CRUD - DELETE
