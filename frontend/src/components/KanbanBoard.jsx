@@ -28,7 +28,9 @@ function KanbanBoard() {
 			try {
 				const fetchedTasks = await getTasks();
 
-				fetchedTasks.sort((a, b) => parseInt(a.id) - parseInt(b.id));
+				fetchedTasks.sort((a, b) =>
+					(a.created_at || "").localeCompare(b.created_at || ""),
+				);
 
 				setTasks(fetchedTasks);
 			} catch (err) {
@@ -47,7 +49,9 @@ function KanbanBoard() {
 			const newTask = await createTask(title, description);
 
 			setTasks((prevTasks) =>
-				[...prevTasks, newTask].sort((a, b) => parseInt(a.id) - parseInt(b.id)),
+				[...prevTasks, newTask].sort((a, b) =>
+					(a.created_at || "").localeCompare(b.created_at || ""),
+				),
 			);
 
 			return true;
@@ -71,7 +75,9 @@ function KanbanBoard() {
 							? { ...t, title: newTitle, description: newDescription }
 							: t,
 					)
-					.sort((a, b) => parseInt(a.id) - parseInt(b.id)),
+					.sort((a, b) =>
+						(a.created_at || "").localeCompare(b.created_at || ""),
+					),
 			);
 
 			await updateTask(taskId, newTitle, newDescription, originalTask.status);
