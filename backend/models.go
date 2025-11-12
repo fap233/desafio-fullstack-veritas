@@ -13,4 +13,5 @@ type Task struct {
 	Title       string `json:"title"`
 	Description string `json:"description,omitempty"`
 	Status      Status `json:"status"`
+	CreatedAt   string `json:"created_at"`
 }

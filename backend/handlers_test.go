@@ -10,7 +10,6 @@ import (
 
 func setup() {
 	store = make(map[string]Task)
-	taskIDCounter = 0
 }
 
 func TestCreateTaskHandler(t *testing.T) {
@@ -34,7 +33,7 @@ func TestCreateTaskHandler(t *testing.T) {
 	}
 
 	var createdTask Task
-	if err := json.NewDecoder(rr.Body).Decode(&createdTask); err != nil {
+	if err := json.Unmarshal(rr.Body.Bytes(), &createdTask); err != nil {
 		t.Fatalf("could not decode response body: %v", err)
 	}
 
@@ -42,8 +41,8 @@ func TestCreateTaskHandler(t *testing.T) {
 		t.Errorf("expected title 'Test Task', got '%s'", createdTask.Title)
 	}
 
-	if createdTask.ID != "1" {
-		t.Errorf("expected ID '1', got '%s'", createdTask.ID)
+	if createdTask.ID == "" {
+		t.Errorf("expected a valid ID, got empty string")
 	}
 }
 

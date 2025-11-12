@@ -6,16 +6,16 @@ import (
 	"net/http"
 	"os"
 	"sort"
-	"strconv"
 	"strings"
 	"sync"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 var store = make(map[string]Task)
 
 var mu sync.RWMutex
-
-var taskIDCounter = 0
 
 const jsonFilePath = "tasks.json"
 
@@ -29,9 +29,7 @@ func saveTasksToFile() {
 	}
 
 	sort.Slice(tasks, func(i, j int) bool {
-		idI, _ := strconv.Atoi(tasks[i].ID)
-		idJ, _ := strconv.Atoi(tasks[j].ID)
-		return idI < idJ
+		return tasks[i].CreatedAt < tasks[j].CreatedAt
 	})
 
 	data, err := json.MarshalIndent(tasks, "", "  ")
@@ -68,27 +66,8 @@ func loadTasksFromFile() {
 	maxID := 0
 	for _, task := range tasks {
 		store[task.ID] = task
-
-		id, err := strconv.Atoi(task.ID)
-		if err != nil {
-			log.Printf("Warning: could not parse task ID '%s' from JSON file: %v", task.ID, err)
-			continue
-		}
-
-		if id > maxID {
-			maxID = id
-		}
 	}
-	taskIDCounter = maxID
 	log.Printf("Loaded %d tasks from tasks.json. Counter set to %d.", len(store), maxID)
-}
-
-func getNextTaskID() string {
-	mu.Lock()
-	defer mu.Unlock()
-
-	taskIDCounter++
-	return strconv.Itoa(taskIDCounter)
 }
 
 // CRUD - CREATE
@@ -104,8 +83,9 @@ func createTaskHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Title is required", http.StatusBadRequest)
 		return
 	}
-	newTask.ID = getNextTaskID()
+	newTask.ID = uuid.New().String()
 	newTask.Status = ToDoStatus
+	newTask.CreatedAt = time.Now().Format(time.RFC3339)
 
 	mu.Lock()
 	store[newTask.ID] = newTask
