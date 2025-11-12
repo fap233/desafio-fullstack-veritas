@@ -17,7 +17,7 @@ const FIXED_COLUMNS = [
 	{ id: "done", title: "Concluídas" },
 ];
 
-const API_URL = "http://localhost:8080";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 function KanbanBoard() {
 	const [tasks, setTasks] = useState([]);
