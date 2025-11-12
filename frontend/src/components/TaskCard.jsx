@@ -116,6 +116,7 @@ function TaskCard({ task, onDelete, onUpdate }) {
 			<div className="absolute right-2 top-2 flex items-center gap-1 opacity-0 group-hover:opacity-100">
 				{/* edit button */}
 				<button
+					aria-label="Editar Tarefa"
 					onClick={(e) => {
 						e.stopPropagation();
 						setIsEditing(true);
@@ -141,6 +142,7 @@ function TaskCard({ task, onDelete, onUpdate }) {
 				{/* delete button */}
 
 				<button
+					aria-label="Excluir Tarefa"
 					onClick={(e) => {
 						e.stopPropagation();
 						onDelete(task.id);
