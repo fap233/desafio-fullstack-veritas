@@ -5,6 +5,7 @@ import {
 	verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { useDroppable } from "@dnd-kit/core";
+import { toast } from "sonner";
 
 function Column({
 	title,
@@ -24,18 +25,22 @@ function Column({
 		id: title,
 	});
 
-	const handleSubmit = (e) => {
+	const handleSubmit = async (e) => {
 		e.preventDefault();
 
 		if (newTaskTitle.trim() === "") {
-			alert("O título da tarefa não pode estar vazio.");
+			toast.warning("O título da tarefa não pode estar vazio.");
 			return;
 		}
-		onTaskAdd(newTaskTitle, newTaskDescription);
+		const success = await onTaskAdd(newTaskTitle, newTaskDescription);
 
-		setNewTaskTitle("");
-		setNewTaskDescription("");
-		setIsAddingTask(false);
+		if (success) {
+			toast.success("Tarefa adicionada com sucesso!");
+
+			setNewTaskTitle("");
+			setNewTaskDescription("");
+			setIsAddingTask(false);
+		}
 	};
 
 	const handleCancel = () => {
