@@ -1,6 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useState } from "react";
+import { toast } from "sonner";
 
 function TaskCard({ task, onDelete, onUpdate }) {
 	const [isEditing, setIsEditing] = useState(false);
@@ -30,14 +31,15 @@ function TaskCard({ task, onDelete, onUpdate }) {
 		opacity: isDragging ? 0 : 1,
 	};
 
-	const handleSave = () => {
+	const handleSave = async () => {
 		if (editedTitle.trim() === "") {
-			setEditedTitle(task.title);
-			setIsEditing(false);
+			toast.warning("O título da tarefa não pode estar vazio.");
 			return;
 		}
-		onUpdate(task.id, editedTitle, editedDescription);
-		setIsEditing(false);
+		const success = await onUpdate(task.id, editedTitle, editedDescription);
+		if (success) {
+			setIsEditing(false);
+		}
 	};
 
 	const handleCancel = () => {
