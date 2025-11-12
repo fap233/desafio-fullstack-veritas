@@ -15,3 +15,14 @@ type Task struct {
 	Status      Status `json:"status"`
 	CreatedAt   string `json:"created_at"`
 }
+
+type CreateTaskRequest struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+}
+
+type UpdateTaskRequest struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Status      Status `json:"status"`
+}
