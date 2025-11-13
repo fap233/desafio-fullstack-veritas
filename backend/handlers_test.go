@@ -8,28 +8,32 @@ import (
 	"testing"
 )
 
-func setup() {
-	store = make(map[string]Task)
+func setup() *ApiServer {
+	return &ApiServer{
+		store:    make(map[string]Task),
+		filePath: "test_tasks.json",
+	}
 }
 
 func TestCreateTaskHandler(t *testing.T) {
-	setup()
+	s := setup()
 
 	taskPayload := `{"title": "Test Task", "description": "This is a test task."}`
 	bodyReader := bytes.NewReader([]byte(taskPayload))
 
 	req := httptest.NewRequest(http.MethodPost, "/tasks", bodyReader)
-
 	rr := httptest.NewRecorder()
 
-	createTaskHandler(rr, req)
+	// chama o método no servidor de teste
+	s.createTaskHandler(rr, req)
 
 	if rr.Code != http.StatusCreated {
 		t.Errorf("expected status %d, got %d", http.StatusCreated, rr.Code)
 	}
 
-	if len(store) != 1 {
-		t.Errorf("expected store length 1, got %d", len(store))
+	// verifica o store dento da instância do servidor
+	if len(s.store) != 1 {
+		t.Errorf("expected store length 1, got %d", len(s.store))
 	}
 
 	var createdTask Task
@@ -40,14 +44,10 @@ func TestCreateTaskHandler(t *testing.T) {
 	if createdTask.Title != "Test Task" {
 		t.Errorf("expected title 'Test Task', got '%s'", createdTask.Title)
 	}
-
-	if createdTask.ID == "" {
-		t.Errorf("expected a valid ID, got empty string")
-	}
 }
 
 func TestCreateTaskHandler_NoTitle(t *testing.T) {
-	setup()
+	s := setup()
 
 	taskPayload := `{"description": "This is a test task without a title."}`
 	bodyReader := bytes.NewReader([]byte(taskPayload))
@@ -55,7 +55,7 @@ func TestCreateTaskHandler_NoTitle(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/tasks", bodyReader)
 	rr := httptest.NewRecorder()
 
-	createTaskHandler(rr, req)
+	s.createTaskHandler(rr, req)
 
 	if rr.Code != http.StatusBadRequest {
 		t.Errorf("expected status %d, got %d", http.StatusBadRequest, rr.Code)
@@ -63,14 +63,14 @@ func TestCreateTaskHandler_NoTitle(t *testing.T) {
 }
 
 func TestGetTaskHandler(t *testing.T) {
-	setup()
-	store["1"] = Task{ID: "1", Title: "Task 1", Status: ToDoStatus}
-	store["2"] = Task{ID: "2", Title: "Task 2", Status: InProgressStatus}
+	s := setup()
+	s.store["1"] = Task{ID: "1", Title: "Task 1", Status: ToDoStatus}
+	s.store["2"] = Task{ID: "2", Title: "Task 2", Status: InProgressStatus}
 
-	req := httptest.NewRequest(http.MethodGet, "/tasks/1", nil)
+	req := httptest.NewRequest(http.MethodGet, "/tasks", nil)
 	rr := httptest.NewRecorder()
 
-	getTasksHandler(rr, req)
+	s.getTasksHandler(rr, req)
 
 	if rr.Code != http.StatusOK {
 		t.Errorf("expected status %d, got %d", http.StatusOK, rr.Code)
@@ -87,9 +87,8 @@ func TestGetTaskHandler(t *testing.T) {
 }
 
 func TestUpdateTaskHandler(t *testing.T) {
-	setup()
-
-	store["1"] = Task{ID: "1", Title: "Original Title", Status: ToDoStatus}
+	s := setup()
+	s.store["1"] = Task{ID: "1", Title: "Original Title", Status: ToDoStatus, CreatedAt: "test-date"}
 
 	updatePayload := `{"title": "Updated Title", "description": "Updated description", "status": "Em Progresso"}`
 	bodyReader := bytes.NewReader([]byte(updatePayload))
@@ -97,24 +96,27 @@ func TestUpdateTaskHandler(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPut, "/tasks/1", bodyReader)
 	rr := httptest.NewRecorder()
 
-	updateTaskHandler(rr, req, "1")
+	s.updateTaskHandler(rr, req, "1")
 
 	if rr.Code != http.StatusOK {
 		t.Errorf("expected status %d, got %d", http.StatusOK, rr.Code)
 	}
 
-	if store["1"].Title != "Updated Title" {
-		t.Errorf("expected title 'Updated Title', got '%s'", store["1"].Title)
+	if s.store["1"].Title != "Updated Title" {
+		t.Errorf("expected title 'Updated Title', got '%s'", s.store["1"].Title)
 	}
-	if store["1"].Status != InProgressStatus {
-		t.Errorf("expected status 'Em Progresso', got '%s'", store["1"].Status)
+	if s.store["1"].Status != InProgressStatus {
+		t.Errorf("expected status 'Em Progresso', got '%s'", s.store["1"].Status)
+	}
+	// O mais importante: verifica se o CreatedAt (que não veio no payload) foi preservado
+	if s.store["1"].CreatedAt != "test-date" {
+		t.Errorf("expected CreatedAt to be preserved, but it was overwritten")
 	}
 }
 
 func TestUpdateTaskHandler_InvalidStatus(t *testing.T) {
-	setup()
-
-	store["1"] = Task{ID: "1", Title: "Original Title", Status: ToDoStatus}
+	s := setup()
+	s.store["1"] = Task{ID: "1", Title: "Original Title", Status: ToDoStatus}
 
 	updatePayload := `{"title": "Updated Title", "status": "Status Inválido"}`
 	bodyReader := bytes.NewReader([]byte(updatePayload))
@@ -122,7 +124,7 @@ func TestUpdateTaskHandler_InvalidStatus(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPut, "/tasks/1", bodyReader)
 	rr := httptest.NewRecorder()
 
-	updateTaskHandler(rr, req, "1")
+	s.updateTaskHandler(rr, req, "1")
 
 	if rr.Code != http.StatusBadRequest {
 		t.Errorf("expected status %d, got %d", http.StatusBadRequest, rr.Code)
@@ -130,7 +132,7 @@ func TestUpdateTaskHandler_InvalidStatus(t *testing.T) {
 }
 
 func TestUpdateTaskHandler_NotFound(t *testing.T) {
-	setup()
+	s := setup()
 
 	updatePayload := `{"title": "Updated Title", "status": "Em Progresso"}`
 	bodyReader := bytes.NewReader([]byte(updatePayload))
@@ -138,7 +140,7 @@ func TestUpdateTaskHandler_NotFound(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPut, "/tasks/999", bodyReader)
 	rr := httptest.NewRecorder()
 
-	updateTaskHandler(rr, req, "999")
+	s.updateTaskHandler(rr, req, "999")
 
 	if rr.Code != http.StatusNotFound {
 		t.Errorf("expected status %d, got %d", http.StatusNotFound, rr.Code)

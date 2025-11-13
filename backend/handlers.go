@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -13,18 +14,31 @@ import (
 	"github.com/google/uuid"
 )
 
-var store = make(map[string]Task)
+// struct principal
+type ApiServer struct {
+	store    map[string]Task
+	mu       sync.RWMutex
+	filePath string
+}
 
-var mu sync.RWMutex
+// construtor
+func NewApiServer() *ApiServer {
+	server := &ApiServer{
+		store:    make(map[string]Task),
+		filePath: "tasks.json",
+	}
 
-const jsonFilePath = "tasks.json"
+	server.loadTasksFromFile()
+	return server
+}
 
-func saveTasksToFile() {
-	mu.RLock()
-	defer mu.RUnlock()
+// persistência (private)
+func (s *ApiServer) saveTasksToFile() {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 
-	tasks := make([]Task, 0, len(store))
-	for _, task := range store {
+	tasks := make([]Task, 0, len(s.store))
+	for _, task := range s.store {
 		tasks = append(tasks, task)
 	}
 
@@ -38,13 +52,13 @@ func saveTasksToFile() {
 		return
 	}
 
-	if err := os.WriteFile(jsonFilePath, data, 0644); err != nil {
+	if err := os.WriteFile(s.filePath, data, 0644); err != nil {
 		log.Printf("Error writing tasks to file: %v", err)
 	}
 }
 
-func loadTasksFromFile() {
-	data, err := os.ReadFile(jsonFilePath)
+func (s *ApiServer) loadTasksFromFile() {
+	data, err := os.ReadFile(s.filePath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			log.Printf("No existing tasks file found, starting fresh.")
@@ -54,8 +68,8 @@ func loadTasksFromFile() {
 		return
 	}
 
-	mu.Lock()
-	defer mu.Unlock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
 	var tasks []Task
 	if err := json.Unmarshal(data, &tasks); err != nil {
@@ -63,18 +77,17 @@ func loadTasksFromFile() {
 		return
 	}
 
-	maxID := 0
 	for _, task := range tasks {
-		store[task.ID] = task
+		s.store[task.ID] = task
 	}
-	log.Printf("Loaded %d tasks from tasks.json. Counter set to %d.", len(store), maxID)
+	log.Printf("Loaded %d tasks from tasks.json.", len(s.store))
 }
 
+// métodos handlers
+
 // CRUD - CREATE
-
-func createTaskHandler(w http.ResponseWriter, r *http.Request) {
+func (s *ApiServer) createTaskHandler(w http.ResponseWriter, r *http.Request) {
 	var req CreateTaskRequest
-
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		log.Printf("Error decoding JSON: %v", err)
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
@@ -84,6 +97,7 @@ func createTaskHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Title is required", http.StatusBadRequest)
 		return
 	}
+
 	newTask := Task{
 		ID:          uuid.New().String(),
 		Title:       req.Title,
@@ -92,11 +106,11 @@ func createTaskHandler(w http.ResponseWriter, r *http.Request) {
 		CreatedAt:   time.Now().Format(time.RFC3339),
 	}
 
-	mu.Lock()
-	store[newTask.ID] = newTask
-	mu.Unlock()
+	s.mu.Lock()
+	s.store[newTask.ID] = newTask
+	s.mu.Unlock()
 
-	saveTasksToFile()
+	s.saveTasksToFile() // Chamada de método
 
 	log.Printf("Task successfully created: ID %s, Title %s", newTask.ID, newTask.Title)
 
@@ -105,24 +119,24 @@ func createTaskHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(newTask)
 }
 
-func tasksHandler(w http.ResponseWriter, r *http.Request) {
+func (s *ApiServer) tasksHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		getTasksHandler(w, r)
+		s.getTasksHandler(w, r) // Chama o método get
 	case http.MethodPost:
-		createTaskHandler(w, r)
+		s.createTaskHandler(w, r) // Chama o método create
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
 
 // CRUD - GET
-func getTasksHandler(w http.ResponseWriter, _ *http.Request) {
-	mu.RLock()
-	defer mu.RUnlock()
+func (s *ApiServer) getTasksHandler(w http.ResponseWriter, _ *http.Request) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 
-	tasks := make([]Task, 0, len(store))
-	for _, task := range store {
+	tasks := make([]Task, 0, len(s.store))
+	for _, task := range s.store {
 		tasks = append(tasks, task)
 	}
 
@@ -135,8 +149,7 @@ func getTasksHandler(w http.ResponseWriter, _ *http.Request) {
 }
 
 // CRUD - UPDATE
-
-func updateTaskHandler(w http.ResponseWriter, r *http.Request, id string) {
+func (s *ApiServer) updateTaskHandler(w http.ResponseWriter, r *http.Request, id string) {
 	var req UpdateTaskRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -156,18 +169,16 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request, id string) {
 	}
 
 	if !isValidStatus {
-
 		msg := "Invalid status value. Must be '" + string(ToDoStatus) + "', '" + string(InProgressStatus) + "' or '" + string(DoneStatus) + "'"
 		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
 
-	mu.Lock()
+	s.mu.Lock()
 
-	existingTask, ok := store[id]
-
+	existingTask, ok := s.store[id]
 	if !ok {
-		mu.Unlock()
+		s.mu.Unlock()
 		http.Error(w, "Task not found", http.StatusNotFound)
 		return
 	}
@@ -176,10 +187,10 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request, id string) {
 	existingTask.Description = req.Description
 	existingTask.Status = req.Status
 
-	store[id] = existingTask
-	mu.Unlock()
+	s.store[id] = existingTask
+	s.mu.Unlock()
 
-	saveTasksToFile()
+	s.saveTasksToFile()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -187,27 +198,26 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request, id string) {
 }
 
 // CRUD - DELETE
-func deleteTaskHandler(w http.ResponseWriter, _ *http.Request, id string) {
-	mu.Lock()
-	_, ok := store[id]
+func (s *ApiServer) deleteTaskHandler(w http.ResponseWriter, _ *http.Request, id string) {
+	s.mu.Lock()
+	_, ok := s.store[id]
 	if !ok {
-		mu.Unlock()
+		s.mu.Unlock()
 		http.Error(w, "Task not found", http.StatusNotFound)
 		return
 	}
 
-	delete(store, id)
+	delete(s.store, id)
+	s.mu.Unlock()
 
-	mu.Unlock()
-
-	saveTasksToFile()
+	s.saveTasksToFile()
 
 	log.Printf("Task successfully deleted: ID %s", id)
 
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func taskDetailHandler(w http.ResponseWriter, r *http.Request) {
+func (s *ApiServer) taskDetailHandler(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/tasks/")
 
 	if id == "" {
@@ -217,10 +227,30 @@ func taskDetailHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodPut:
-		updateTaskHandler(w, r, id)
+		s.updateTaskHandler(w, r, id)
 	case http.MethodDelete:
-		deleteTaskHandler(w, r, id)
+		s.deleteTaskHandler(w, r, id)
 	default:
 		http.Error(w, "Method not allowed on this route", http.StatusMethodNotAllowed)
 	}
+}
+
+// handlers Auxiliares
+func (s *ApiServer) enableCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (s *ApiServer) homeHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "KanbanApi (v2 - Refactored) already working!")
 }
