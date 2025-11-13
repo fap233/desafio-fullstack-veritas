@@ -173,5 +173,6 @@ A documentação exigida (User Flow) encontra-se na pasta /docs.
 - Implementar integração com calendários (Google Calendar, Outlook).
 - Implementar integração com ferramentas de comunicação (Slack, Microsoft Teams).
 - Melhorar responsividade e design UI/UX.
+- Refatorar gerenciamento de estado do Hook useKanban para uma solução de estado global (React Context ou Zustand)
 
 ---
