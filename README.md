@@ -10,11 +10,12 @@ Este projeto é uma solução para o desafio técnico da Veritas Consultoria, im
 
 ### Backend (Go)
 
-- API RESTful completa com endpoints CRUD (`/tasks`).
-- Armazenamento em memória com **persistência bônus em arquivo JSON** (`tasks.json`).
-- Roteamento nativo (sem frameworks externos) e middleware de CORS.
-- Lógica de concorrência segura usando `sync.RWMutex`.
-- **Testes Unitários:** Cobertura de testes para os principais handlers.
+- **API RESTful** completa com endpoints CRUD (/tasks).
+- **Armazenamento em memória com **persistência bônus em arquivo JSON** (tasks.json).
+- **Arquitetura Limpa (Injeção de Dependência):** O estado (store, mutex) é encapsulado na struct ApiServer, eliminando variáveis globais e permitindo testes isolados.
+- **DTOs (Data Transfer Objects):** Separação clara entre models (entidade) e DTOs (requisições) para uma API mais segura e robusta.
+- Lógica de concorrência segura (sync.RWMutex) gerenciada pela ApiServer.
+- **Testes Unitários:** Cobertura de testes para os handlers, testando a instância do servidor de forma isolada.
 
 ### Frontend (React)
 
@@ -24,8 +25,10 @@ Este projeto é uma solução para o desafio técnico da Veritas Consultoria, im
   - **Ler:** Buscar e exibir todas as tarefas da API.
   - **Editar:** Editar título e descrição de tarefas existentes.
   - **Excluir:** Remover tarefas.
+- **Gerenciamento de Estado com Custom Hooks:** Lógica de fetch, CRUD e toast isolada no hook useKanban para componentes mais limpos.
 - **Drag-and-Drop:** Mover tarefas entre colunas (atualizando o status no backend) usando `dnd-kit`.
-- **UX Aprimorada:** Feedbacks de loading, tratamento de erros e validações visuais.
+- **UX Aprimorada:** Feedbacks de loading, tratamento de erros e atualizações otimistas.
+- **Testes Unitários e de Integração (Vitest):** Cobertura de testes para componentes (TaskCard via RTL) e lógica de estado (useKanban).
 - **Responsividade:** Layout adaptável para Mobile (colunas empilhadas) e Desktop.
 - **React Compiler:** Otimização automática de renderização ativada.
 
@@ -40,10 +43,11 @@ Este projeto é uma solução para o desafio técnico da Veritas Consultoria, im
 ## 🛠️ Stack de Tecnologia
 
 - **Backend:** Go (v1.25) (stdlib `net/http`)
-- **Frontend:** React (v18) + Vite
+- **Frontend:** React (v19) + Vite
 - **Estilização:** Tailwind CSS
 - **Chamadas de API:** Axios
 - **Drag & Drop:** `@dnd-kit/core`
+- **Testes:** Vitest + React Testing Library
 
 ---
 
@@ -105,12 +109,25 @@ O app abrirá automaticamente no seu navegador em http://localhost:5173.
 
 ## 🧪 Como Rodar os Testes (Backend)
 
-O projeto possui testes unitarios para garantir a integridade da API.
+O projeto possui cobertura de testes tanto no backend quanto no frontend.
+
+**1. Testes do Backend (Go)**
 
 ```bash
 cd backend
 
 go test -v
+```
+**2. Testes do Frontend (Vitest)**
+
+```bash
+cd frontend
+
+# Roda os testes uma vez
+npm test
+
+# Roda os testes em modo "watch" (observação)
+npm test -- --watch
 ```
 
 ## 📂 Documentação do Projeto
@@ -122,12 +139,19 @@ A documentação exigida (User Flow) encontra-se na pasta /docs.
 
 ## 📝 Decisões Técnicas
 
-- Backend (Go): Optei por usar apenas a biblioteca padrão net/http (sem frameworks como Gin ou Echo) para demonstrar proficiência nos fundamentos do Go, como exigido por um escopo de MVP. A lógica de persistência foi implementada com os.WriteFile e os.ReadFile, protegida por sync.RWMutex para evitar deadlocks (destravando antes de chamar a função de salvar).
-- Frontend (React):
-  - Utilizei Vite pela sua performance superior. O estado principal é gerenciado no KanbanBoard.jsx e passado para os componentes filhos (Column, TaskCard) via "prop drilling", uma abordagem limpa para um app deste tamanho.
-  - Utilizei React 19 com o novo React Compiler para garantir performance máxima sem a necessidade excessiva de useMemo/useCallback manuais. O @dnd-kit foi escolhido pela acessibilidade e leveza.
-  - Drag-and-Drop: A biblioteca dnd-kit foi escolhida por ser leve, moderna e oferecer DragOverlay para uma UI fluida.
-- Docker: Configurei multi-stage builds para garantir imagens finais extremamente leves (Alpine) e seguras, fixando as versões das imagens base para evitar quebras futuras.
+- **Backend (Go):** Optei por usar apenas a biblioteca padrão net/http para demonstrar proficiência nos fundamentos do Go. A arquitetura foi **completamente refatorada para usar Injeção de Dependência:** todo o estado (mapa de store, mutex, file path) é encapsulado na struct ApiServer, que é injetada nos handlers. Isso elimina variáveis globais, garante thread safety e torna os testes 100% isolados. Além disso, foram introduzidos **DTOs (Data Transfer Objects)** para Create e Update, desacoplando a lógica da API da entidade de domínio (Task).
+
+- **Frontend (React):**
+
+  - Utilizei Vite pela sua performance superior e **React 19** com o novo React Compiler.
+
+  - **A lógica de estado e chamadas de API foi extraída do** KanbanBoard.jsx para um Custom Hook (useKanban), limpando o componente visual e centralizando as regras de negócio.
+
+  - **Testes em React 19:** A suíte de testes (Vitest + RTL) foi configurada com resolve.alias no vite.config.js para forçar a resolução de módulos ESM do React 19, corrigindo conflitos de ambiente CJS/ESM.
+
+  - **Drag-and-Drop:** A biblioteca @dnd-kit foi escolhida por ser leve, moderna e oferecer DragOverlay para uma UI fluida.
+
+- **Docker:** Configurei multi-stage builds para garantir imagens finais extremamente leves (Alpine) e seguras, fixando as versões das imagens base para evitar quebras futuras.
 
 ---
 
