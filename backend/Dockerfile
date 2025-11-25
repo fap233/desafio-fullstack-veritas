@@ -18,8 +18,7 @@ WORKDIR /app
 
 COPY --from=builder --chown=appuser:appgroup /app/server .
 
-
-VOLUME /app/tasks.json
+RUN chown -R appuser:appgroup /app
 
 USER appuser
 
