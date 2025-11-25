@@ -6,8 +6,7 @@ services:
     container_name: kanban-backend
     ports:
       - "8080:8080"
-    volumes:
-      - ./backend/tasks.json:/app/tasks.json
+
     healthcheck:
       test:
         [
